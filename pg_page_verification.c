@@ -36,7 +36,7 @@
 #include "storage/checksum_impl.h"
 #include "storage/bufpage.h"
 
-#define MAX_DIR_LENGTH 256
+#define MAX_DIR_LENGTH PATH_MAX
 
 /* global flag values */
 int verbose = 0;
@@ -164,7 +164,7 @@ scan_segmentfile(const char *filename, const char *dirpath)
     BlockNumber blkno = 0;
     BlockNumber corrupted = 0;
 
-    fd = open(filename, O_RDONLY);
+    fd = pgwin32_open(filename, O_RDONLY);
     if (fd < 0)
     {
         fprintf(stderr, "ERROR: %s: %s cannot be opened\n", strerror(errno), filename);
