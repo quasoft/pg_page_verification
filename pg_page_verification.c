@@ -174,7 +174,8 @@ scan_segmentfile(const char *filename, const char *dirpath)
         return 1;
     }
 
-    while (read(fd, page, BLCKSZ) == BLCKSZ)
+    int n;
+    while ((n = read(fd, page, BLCKSZ)) > 0)
     {
         if (is_page_corrupted(page, blkno, filename, dirpath))
         {
