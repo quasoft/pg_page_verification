@@ -152,7 +152,7 @@ scan_segmentfile(const char *filename, const char *dirpath)
      * it as it is recreated upon server startup. Return false since
      * zero corrupt pages are checked here.
      */
-    if (strstr(filename, "pg_internal.init") != NULL)
+    if (strstr(filename, "pg_internal.init") != NULL || strstr(filename, "pg_filenode.map") != NULL || strstr(filename, "PG_VERSION") != NULL)
         return 0;
 
     if (verbose)
