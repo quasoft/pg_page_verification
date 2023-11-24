@@ -27,7 +27,6 @@
 
 /* headers for directory scanning */
 #include <string.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <stddef.h>
 
