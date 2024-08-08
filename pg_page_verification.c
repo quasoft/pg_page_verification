@@ -126,6 +126,7 @@ is_page_corrupted(const char *page, BlockNumber blkno, const char *filename,
     if (phdr->pd_checksum != 0 && phdr->pd_checksum != checksum)
     {
         corrupted = true;
+        printf("ERROR: CORRUPTED BLOCK in %s/%s: %d\n", dirpath, filename, blkno);
         if (verbose)
             printf("ERROR: corruption found in %s/%s[%d], expected %x, found %x\n",
                 dirpath, filename, blkno, checksum, phdr->pd_checksum);
@@ -346,12 +347,12 @@ main(int argc, char *argv[])
 
     if (corrupted_pages_found > 0)
     {
-        printf("CORRUPTION FOUND: %d\n", corrupted_pages_found);
+        printf("TOTAL CORRUPTED BLOCKS: %d\n", corrupted_pages_found);
         exit(1);
     }
     else
     {
-        printf("NO CORRUPTION FOUND\n");
+        printf("NO CORRUPTED BLOCKS\n");
         exit(0);
     }
 }
