@@ -139,7 +139,7 @@ is_page_corrupted(const char *page, BlockNumber blkno, const char *filename,
 }
 
 static uint32
-scan_segmentfile(const char *filename, const char *dirpath)
+scan_segmentfile(const char *filepath, const char *filename, const char *dirpath)
 {
 
     /* Performance considerations:
@@ -156,18 +156,17 @@ scan_segmentfile(const char *filename, const char *dirpath)
         return 0;
 
     if (verbose)
-        printf("DEBUG: scanning segment filename: %s/%s\n",
-            dirpath, filename);
+        printf("DEBUG: scanning segment filename: %s\n", filepath);
 
     int fd;
     char page[BLCKSZ];
     BlockNumber blkno = 0;
     BlockNumber corrupted = 0;
 
-    fd = pgwin32_open(filename, O_RDONLY);
+    fd = pgwin32_open(filepath, O_RDONLY);
     if (fd < 0)
     {
-        fprintf(stderr, "ERROR: %s: %s cannot be opened\n", strerror(errno), filename);
+        fprintf(stderr, "ERROR: %s: %s cannot be opened\n", strerror(errno), filepath);
         /* return 1 so that other segment files can be scanned, but that this
          * segment file is marked as corrupted/some unknown error
          */
@@ -212,14 +211,18 @@ scan_directory(const char *dirpath)
 
     if (d)
     {
-        chdir(dirpath);
         while ((dir = readdir(d)) != NULL)
         {
-            lstat(dir->d_name, &statbuf);
+            char filepath[MAX_DIR_LENGTH];
+            snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, dir->d_name);
+
+            if (lstat(filepath, &statbuf) != 0) {
+                printf("ERROR: Failed to get stats for file %s\n", filepath);
+                continue;
+            }
 
             if (verbose)
-                printf("DEBUG: direntry: %s/%s - statbuf.st_mode: %d\n",
-                    dirpath, dir->d_name, statbuf.st_mode);
+                printf("DEBUG: direntry: %s - statbuf.st_mode: %d\n", filepath, statbuf.st_mode);
 
             if (S_ISDIR(statbuf.st_mode))
             {
@@ -227,14 +230,11 @@ scan_directory(const char *dirpath)
                     strcmp("..", dir->d_name) == 0)
                     continue;
 
-                char new_dirpath[MAX_DIR_LENGTH];
-                snprintf(new_dirpath, MAX_DIR_LENGTH, "%s/%s", dirpath, dir->d_name);
-
-                corrupt_pages_found += scan_directory(new_dirpath);
+                corrupt_pages_found += scan_directory(filepath);
             }
             else if (S_ISREG(statbuf.st_mode))
             {
-                corrupt_pages_found += scan_segmentfile(dir->d_name, dirpath);
+                corrupt_pages_found += scan_segmentfile(filepath, dir->d_name, dirpath);
             }
         }
         closedir(d);
